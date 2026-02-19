@@ -1,0 +1,163 @@
+{
+  "nodes": [
+    {
+      "id": "legend-box",
+      "type": "status",
+      "x": 970,
+      "y": 20,
+      "width": 220,
+      "height": 160,
+      "color": "#18181b",
+      "label": "Legend:\nWFM - Waiting for Merge\nRFR - Ready for Review\nApp - Approved\nLetters - your first initial"
+    },
+    {
+      "id": "quote-header",
+      "type": "text",
+      "x": 450,
+      "y": 10,
+      "width": 250,
+      "height": 110,
+      "text": "Quote of the day\nI am always right\n\n- #sully",
+      "fontSize": 28
+    },
+    {
+      "id": "events-header",
+      "type": "text",
+      "x": 800,
+      "y": 90,
+      "width": 140,
+      "height": 36,
+      "text": "Events",
+      "fontSize": 24
+    },
+    {
+      "id": "events-text",
+      "type": "text",
+      "x": 800,
+      "y": 190,
+      "width": 180,
+      "height": 36,
+      "text": "BillyKart Bash 12/4",
+      "fontSize": 18
+    },
+    {
+      "id": "red-header",
+      "type": "status",
+      "x": 40,
+      "y": 310,
+      "width": 220,
+      "height": 80,
+      "color": "#dc2626",
+      "label": "ENV files must be merged\nbefore any further work is\nable to proceed"
+    },
+    {
+      "id": "red-list",
+      "type": "status",
+      "x": 50,
+      "y": 420,
+      "width": 220,
+      "height": 200,
+      "color": "#dc2626",
+      "label": "Script Server\nReviews Required:\n#47 - Deployed\n#48 - Deployed\n#49 - Deployed\n#50 - Deployed\n#51 - RFR T\n#52 - RFR T"
+    },
+    {
+      "id": "yellow-header",
+      "type": "status",
+      "x": 290,
+      "y": 320,
+      "width": 220,
+      "height": 80,
+      "color": "#ca8a04",
+      "label": "Once Prio is merged and\nstable, the yellow will be\nmerged"
+    },
+    {
+      "id": "yellow-list-1",
+      "type": "status",
+      "x": 290,
+      "y": 420,
+      "width": 220,
+      "height": 85,
+      "color": "#ca8a04",
+      "label": "#22 - RFR R\n#23 - RFR R\n#26 - RFR R"
+    },
+    {
+      "id": "yellow-list-2",
+      "type": "status",
+      "x": 300,
+      "y": 520,
+      "width": 220,
+      "height": 85,
+      "color": "#ca8a04",
+      "label": "#25 - Deployed\n#24 - RFR L"
+    },
+    {
+      "id": "green-header",
+      "type": "status",
+      "x": 530,
+      "y": 320,
+      "width": 220,
+      "height": 80,
+      "color": "#16a34a",
+      "label": "Once previous step is\nmerged, these will be\nmerged",
+      "text": "Once previous step ismerged, these will be merged"
+    },
+    {
+      "id": "green-list",
+      "type": "status",
+      "x": 530,
+      "y": 420,
+      "width": 220,
+      "height": 200,
+      "color": "#16a34a",
+      "label": "#74 - APP\n#87 OBD repo L\n#70 - RFR L\n#68 - RFR T\n#62 - RFR T\n#60 - RFR R\n#53 - App WFM"
+    },
+    {
+      "id": "id_28k8ihza5",
+      "type": "text",
+      "x": 810,
+      "y": 320,
+      "width": 150,
+      "height": 60,
+      "text": "wdwddw",
+      "fontSize": 14
+    },
+    {
+      "id": "id_tzi63c9tr",
+      "type": "text",
+      "x": 810,
+      "y": 420,
+      "width": 200,
+      "height": 80,
+      "text": "wdwddw\n\nwwww",
+      "fontSize": 14
+    }
+  ],
+  "edges": [
+    {
+      "id": "red-to-yellow",
+      "fromId": "red-header",
+      "toId": "yellow-header",
+      "color": "#18181b"
+    },
+    {
+      "id": "yellow-to-green",
+      "fromId": "yellow-header",
+      "toId": "green-header",
+      "color": "#18181b"
+    },
+    {
+      "id": "id_h8xhpydcg",
+      "fromId": "red-list",
+      "toId": "yellow-list-2",
+      "color": "#ea580c",
+      "label": "",
+      "dashed": false,
+      "bidirectional": false
+    }
+  ],
+  "view": {
+    "panX": 349.8333740234375,
+    "panY": 145.66668701171875,
+    "zoom": 1.5
+  }
+}

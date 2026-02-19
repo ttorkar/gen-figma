@@ -4,7 +4,8 @@ Minimal Figma-like canvas for one local page (e.g. TV dashboard). No Figma depen
 
 ## Run
 
-Open `index.html` in a browser (file:// or any static server). No build.
+- **With file board (recommended):** `npm install` then `node server.js` (or `npm start`), then open http://localhost:3751. The app loads and saves **`board.json`** in the project folder. No localStorage.
+- **Without server:** Open `index.html` (file:// or static server). No auto-save; use Export/Import JSON to save or load a file.
 
 ## Usage
 
@@ -18,7 +19,7 @@ Open `index.html` in a browser (file:// or any static server). No build.
 
 ## Document format (for AI / scripts)
 
-The board is a single JSON object. Export via “Export JSON” or read from localStorage key `gen-figma-board`.
+The board is a single JSON object. When using the dev server (`node server.js`), the live file is **`board.json`** in the project root—edit it and refresh the app. Otherwise use Export/Import JSON.
 
 ```json
 {
@@ -41,5 +42,9 @@ Full schema: `schema.json`.
 
 ## Persistence
 
-- **In-browser:** Auto-save to `localStorage` on change.
-- **File:** Use Export JSON / Import JSON. The exported file is the canonical board; edit it (or generate it) and re-import.
+- **With server:** Board lives in **`board.json`** only. Load on startup (GET), auto-save on change (POST, debounced). Edit `board.json` with AI or an editor, then refresh.
+- **Without server:** No auto-save. Use Export JSON / Import JSON to save or load a file.
+
+## Collaboration
+
+With the server running, open the same URL in multiple tabs (or different devices on the same LAN). Every save is broadcast over WebSocket; all clients get the latest nodes and edges. Last write wins. Pan/zoom stay local per tab.

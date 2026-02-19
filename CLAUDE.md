@@ -8,11 +8,13 @@ Local single-page Figma-like canvas (infinite canvas, draggable nodes, status bl
 - **`css/main.css`** — Dot grid, node/panel styles, status colors.
 - **`js/app.js`** — All app logic: state, pan/zoom, nodes, edges, selection, properties, undo/redo, persist.
 - **`schema.json`** — JSON schema for the board document.
+- **`board.json`** — Live board data when using the dev server; edit this file for AI-driven changes.
+- **`server.js`** — Minimal Node server: serves static app + GET/POST `board.json`.
 - **`README.md`** — User-facing run + usage + JSON format.
 
 ## Board document (JSON)
 
-Saved in `localStorage` under `gen-figma-board` and exportable as JSON. Structure:
+When running `node server.js`, the app loads and saves **`board.json`** (project root) only; no localStorage. Edit that file and refresh to see changes. Without the server, use Export/Import JSON. Structure:
 
 ```json
 {
@@ -29,7 +31,7 @@ Saved in `localStorage` under `gen-figma-board` and exportable as JSON. Structur
 - **Node types:** `text` (has `text`; optional `width`/`height`) and `status` (has `color`, `label`; optional `width`/`height`).
 - **IDs:** Any unique string; app uses `id_` + random. Edges reference `node.id`.
 
-To change the board via AI: edit or generate this JSON, then user imports via “Import JSON” or you can document replacing `localStorage` contents (e.g. in browser console).
+To change the board via AI: edit **`board.json`** (when using the server) and user refreshes; or generate JSON and user uses “Import JSON”.
 
 ## Conventions in code
 
