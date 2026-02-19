@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Canvas — local board</title>
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <header class="toolbar">
+    <div class="toolbar-group">
+      <button type="button" id="btn-add-text" title="Add text box">Text</button>
+      <button type="button" id="btn-add-status" title="Add status block">Status</button>
+      <button type="button" id="btn-connect" title="Connect selected (first = from, second = to)">Connect</button>
+    </div>
+    <div class="toolbar-group">
+      <button type="button" id="btn-undo" title="Undo">Undo</button>
+      <button type="button" id="btn-redo" title="Redo">Redo</button>
+    </div>
+    <div class="toolbar-group">
+      <button type="button" id="btn-export-json" title="Download board as JSON">Export JSON</button>
+      <button type="button" id="btn-import-json" title="Load JSON file">Import JSON</button>
+      <input type="file" id="input-import-json" accept=".json" hidden />
+    </div>
+  </header>
+
+  <main class="workspace">
+    <div id="canvas-wrap" class="canvas-wrap">
+      <div id="canvas" class="canvas">
+        <div class="canvas-grid" aria-hidden="true"></div>
+        <svg id="edges-layer" class="edges-layer" aria-hidden="true"></svg>
+        <div id="nodes-layer" class="nodes-layer"></div>
+      </div>
+    </div>
+
+    <aside id="properties-panel" class="properties-panel hidden">
+      <div class="properties-header">
+        <h2>Properties</h2>
+        <button type="button" id="btn-close-props" aria-label="Close">×</button>
+      </div>
+      <div id="properties-content" class="properties-content"></div>
+    </aside>
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

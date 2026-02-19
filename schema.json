@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Board document",
+  "description": "Persistence format for the local Figma-like canvas. AI can read/edit this JSON to modify the board.",
+  "type": "object",
+  "properties": {
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "x", "y"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique node id" },
+          "type": { "enum": ["text", "status"], "description": "text = text box, status = colored block" },
+          "x": { "type": "number", "description": "Left position on canvas" },
+          "y": { "type": "number", "description": "Top position on canvas" },
+          "width": { "type": "number", "default": 200 },
+          "height": { "type": "number", "default": 80 },
+          "text": { "type": "string", "description": "For type=text only" },
+          "color": { "enum": ["red", "yellow", "green", "black"], "description": "For type=status only" },
+          "label": { "type": "string", "description": "For type=status only, e.g. WFM, RFR, App" }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "description": "Arrows from one node to another (dependency/flow)",
+      "items": {
+        "type": "object",
+        "required": ["id", "fromId", "toId"],
+        "properties": {
+          "id": { "type": "string" },
+          "fromId": { "type": "string", "description": "Source node id" },
+          "toId": { "type": "string", "description": "Target node id" }
+        }
+      }
+    },
+    "view": {
+      "type": "object",
+      "description": "Camera: pan and zoom",
+      "properties": {
+        "panX": { "type": "number" },
+        "panY": { "type": "number" },
+        "zoom": { "type": "number", "minimum": 0.25, "maximum": 2 }
+      }
+    }
+  }
+}
