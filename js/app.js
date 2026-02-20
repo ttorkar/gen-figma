@@ -8,6 +8,12 @@
   let persistToFileTimer = null;
   let collabWs = null;
   let collabReconnectTimer = null;
+  let collabStatus = 'disconnected';
+  let presenceUsers = [];
+  let myUserId = null;
+  let spaceHeld = false;
+  let marqueeStart = null;
+  let marqueeEl = null;
 
   let state = {
     nodes: [],
@@ -509,12 +515,26 @@
         addBtn.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); addCheckboxItem(node.id); });
         inner.appendChild(addBtn);
         el.appendChild(inner);
+        ['e', 's', 'se'].forEach((resizeEdge) => {
+          const handle = document.createElement('div');
+          handle.className = 'node-resize-handle node-resize-' + resizeEdge;
+          handle.dataset.resize = resizeEdge;
+          handle.addEventListener('mousedown', (ev) => { ev.preventDefault(); ev.stopPropagation(); onResizeStart(ev, node, resizeEdge); });
+          el.appendChild(handle);
+        });
       } else {
         const inner = document.createElement('div');
         inner.className = 'node-status';
         inner.style.background = statusColor(node);
         inner.textContent = node.text != null ? node.text : (node.label || 'Status');
         el.appendChild(inner);
+        ['e', 's', 'se'].forEach((resizeEdge) => {
+          const handle = document.createElement('div');
+          handle.className = 'node-resize-handle node-resize-' + resizeEdge;
+          handle.dataset.resize = resizeEdge;
+          handle.addEventListener('mousedown', (ev) => { ev.preventDefault(); ev.stopPropagation(); onResizeStart(ev, node, resizeEdge); });
+          el.appendChild(handle);
+        });
       }
 
       if (state.selection.includes(node.id)) {
@@ -868,10 +888,11 @@
 
 
   function onResizeStart(e, node, edge) {
-    if (node.type !== 'text') return;
+    const resizable = node.type === 'text' || node.type === 'status' || node.type === 'checkbox';
+    if (!resizable) return;
     pushUndo();
-    const minW = 60;
-    const minH = 24;
+    const minW = node.type === 'checkbox' ? 80 : 60;
+    const minH = node.type === 'checkbox' ? 32 : 24;
 
     const onMove = (e2) => {
       const p = screenToCanvas(e2.clientX, e2.clientY);
@@ -898,6 +919,13 @@
 
 
   function startNodeDrag(e, node) {
+    const moveIds = state.selection.length > 1 && state.selection.includes(node.id)
+      ? state.selection.slice()
+      : [node.id];
+    const startPositions = moveIds.map((id) => {
+      const n = getNode(id);
+      return n ? { id, x: n.x, y: n.y } : null;
+    }).filter(Boolean);
     let startX = e.clientX;
     let startY = e.clientY;
     let startNodeX = node.x;
@@ -914,8 +942,15 @@
       startY = e2.clientY;
       startNodeX += dx;
       startNodeY += dy;
-      node.x = Math.round(startNodeX / 10) * 10;
-      node.y = Math.round(startNodeY / 10) * 10;
+      const totalDx = startNodeX - (startPositions.find((p) => p.id === node.id).x);
+      const totalDy = startNodeY - (startPositions.find((p) => p.id === node.id).y);
+      startPositions.forEach((p) => {
+        const n = getNode(p.id);
+        if (n) {
+          n.x = Math.round((p.x + totalDx) / 10) * 10;
+          n.y = Math.round((p.y + totalDy) / 10) * 10;
+        }
+      });
       render();
     };
     const onUp = () => {
@@ -956,21 +991,93 @@
     let panStart = { x: 0, y: 0 };
     let viewStart = { panX: 0, panY: 0 };
 
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        const active = document.activeElement;
+        if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA' && !active.isContentEditable)) {
+          e.preventDefault();
+          spaceHeld = true;
+          document.body.classList.add('space-held');
+        }
+      }
+    });
+    document.addEventListener('keyup', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        spaceHeld = false;
+        document.body.classList.remove('space-held');
+      }
+    });
+
     canvas.addEventListener('mousedown', (e) => {
       if (e.target.closest('.node')) return;
       if (e.target.closest('[data-edge-id]')) return;
       state.selectedEdgeId = null;
-      canvas.classList.add('panning');
-      panStart = { x: e.clientX, y: e.clientY };
-      viewStart = { ...state.view };
+      if (spaceHeld) {
+        canvas.classList.add('panning');
+        panStart = { x: e.clientX, y: e.clientY };
+        viewStart = { ...state.view };
+      } else {
+        marqueeStart = { x: e.clientX, y: e.clientY };
+      }
     });
     document.addEventListener('mousemove', (e) => {
-      if (!canvas.classList.contains('panning')) return;
-      state.view.panX = viewStart.panX + (e.clientX - panStart.x);
-      state.view.panY = viewStart.panY + (e.clientY - panStart.y);
-      applyView();
+      if (marqueeStart) {
+        const dx = e.clientX - marqueeStart.x;
+        const dy = e.clientY - marqueeStart.y;
+        if (!marqueeEl && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+          marqueeEl = document.createElement('div');
+          marqueeEl.className = 'marquee-rect';
+          marqueeEl.setAttribute('aria-hidden', 'true');
+          canvasWrap.appendChild(marqueeEl);
+        }
+        if (marqueeEl) {
+          const left = Math.min(marqueeStart.x, e.clientX);
+          const top = Math.min(marqueeStart.y, e.clientY);
+          const w = Math.abs(dx);
+          const h = Math.abs(dy);
+          const rect = canvasWrap.getBoundingClientRect();
+          marqueeEl.style.left = (left - rect.left) + 'px';
+          marqueeEl.style.top = (top - rect.top) + 'px';
+          marqueeEl.style.width = w + 'px';
+          marqueeEl.style.height = h + 'px';
+        }
+        return;
+      }
+      if (canvas.classList.contains('panning')) {
+        state.view.panX = viewStart.panX + (e.clientX - panStart.x);
+        state.view.panY = viewStart.panY + (e.clientY - panStart.y);
+        applyView();
+      }
     });
     document.addEventListener('mouseup', () => {
+      if (marqueeEl) {
+        const ml = parseFloat(marqueeEl.style.left);
+        const mt = parseFloat(marqueeEl.style.top);
+        const mw = parseFloat(marqueeEl.style.width);
+        const mh = parseFloat(marqueeEl.style.height);
+        const r = {
+          x: (ml - state.view.panX) / state.view.zoom,
+          y: (mt - state.view.panY) / state.view.zoom,
+          w: mw / state.view.zoom,
+          h: mh / state.view.zoom,
+        };
+        const hit = state.nodes.filter((n) => {
+          const nr = getNodeRect(n);
+          return !(nr.x + nr.w < r.x || nr.x > r.x + r.w || nr.y + nr.h < r.y || nr.y > r.y + r.h);
+        });
+        state.selection = hit.map((n) => n.id);
+        marqueeEl.remove();
+        marqueeEl = null;
+        marqueeStart = null;
+        render();
+        if (state.selection.length === 1) { openProperties(); renderProperties(); }
+        else if (state.selection.length === 0) closeProperties();
+        else renderProperties();
+      } else if (marqueeStart) {
+        selectOnly(null);
+        marqueeStart = null;
+      }
       canvas.classList.remove('panning');
     });
 
@@ -1015,20 +1122,75 @@
   }
 
 
+  function setCollabStatus(status) {
+    collabStatus = status;
+    const el = $('collab-status');
+    if (!el) return;
+    el.textContent = status === 'connected' ? 'Connected' : status === 'reconnecting' ? 'Reconnecting…' : status === 'offline' ? 'Offline' : '';
+    el.className = 'collab-status ' + (status === 'connected' ? 'connected' : status === 'reconnecting' ? 'reconnecting' : status === 'offline' ? 'offline' : '');
+    el.style.display = status ? 'block' : 'none';
+  }
+
+  function renderPresence() {
+    const el = $('presence-list');
+    if (!el) return;
+    if (presenceUsers.length === 0) { el.innerHTML = ''; el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    const name = (typeof localStorage !== 'undefined' && localStorage.getItem('gen-figma-name')) || 'Anonymous';
+    el.innerHTML = '<div class="presence-list__title">Online</div>' +
+      presenceUsers.map((u) => '<div class="presence-list__user' + (u.id === myUserId ? ' presence-list__user--you' : '') + '">' + escapeHtml(u.name) + (u.id === myUserId ? ' (you)' : '') + '</div>').join('') +
+      '<button type="button" class="presence-list__set-name" id="presence-set-name">Set your name</button>';
+    el.querySelector('#presence-set-name').addEventListener('click', () => {
+      const v = prompt('Your name', name);
+      if (v != null && v.trim()) {
+        try { localStorage.setItem('gen-figma-name', v.trim().slice(0, 32)); } catch (_) {}
+        if (collabWs && collabWs.readyState === 1) collabWs.send(JSON.stringify({ type: 'hello', name: v.trim().slice(0, 32) }));
+        renderPresence();
+      }
+    });
+  }
+
   function connectCollab() {
     const scheme = location.protocol === 'https:' ? 'wss:' : 'ws:';
     const url = scheme + '//' + location.host;
     const ws = new WebSocket(url);
+    setCollabStatus('reconnecting');
+
+    ws.onopen = () => {
+      setCollabStatus('connected');
+      const name = (typeof localStorage !== 'undefined' && localStorage.getItem('gen-figma-name')) || 'Anonymous';
+      ws.send(JSON.stringify({ type: 'hello', name }));
+    };
+
     ws.onmessage = (ev) => {
       try {
         const data = JSON.parse(ev.data);
+        if (data && data.type === 'init') {
+          myUserId = data.yourId;
+          presenceUsers = data.users || [];
+          applyBoardFromServer(data.board);
+          renderPresence();
+          return;
+        }
+        if (data && data.type === 'presence') {
+          presenceUsers = data.users || [];
+          renderPresence();
+          return;
+        }
         applyBoardFromServer(data);
       } catch (_) {}
     };
+
     ws.onclose = () => {
       collabWs = null;
+      setCollabStatus('offline');
+      presenceUsers = [];
+      renderPresence();
       if (collabReconnectTimer) clearTimeout(collabReconnectTimer);
-      collabReconnectTimer = setTimeout(connectCollab, 3000);
+      collabReconnectTimer = setTimeout(() => {
+        setCollabStatus('reconnecting');
+        connectCollab();
+      }, 3000);
     };
     ws.onerror = () => {};
     collabWs = ws;

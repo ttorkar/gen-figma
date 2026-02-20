@@ -30,10 +30,23 @@ function loadBoardFromFile() {
   }
 }
 
+const presence = new Map();
+
+function getPresenceList() {
+  return Array.from(presence.entries()).map(([id, data]) => ({ id, name: data.name || 'Anonymous' }));
+}
+
 function broadcastBoard() {
   const raw = boardJson;
   wss.clients.forEach((client) => {
     if (client.readyState === 1) client.send(raw);
+  });
+}
+
+function broadcastPresence() {
+  const payload = JSON.stringify({ type: 'presence', users: getPresenceList() });
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1) client.send(payload);
   });
 }
 
@@ -99,8 +112,35 @@ const server = http.createServer((req, res) => {
 
 const wss = new WebSocketServer({ server });
 
+function shortId() {
+  return Math.random().toString(36).slice(2, 8);
+}
+
 wss.on('connection', (ws) => {
-  ws.send(boardJson);
+  const id = shortId();
+  presence.set(ws, { id, name: 'Anonymous' });
+  ws.send(JSON.stringify({
+    type: 'init',
+    board: JSON.parse(boardJson),
+    yourId: id,
+    users: getPresenceList(),
+  }));
+  broadcastPresence();
+
+  ws.on('message', (raw) => {
+    try {
+      const msg = JSON.parse(raw.toString());
+      if (msg.type === 'hello' && typeof msg.name === 'string') {
+        const data = presence.get(ws);
+        if (data) { data.name = msg.name.slice(0, 32); broadcastPresence(); }
+      }
+    } catch (_) {}
+  });
+
+  ws.on('close', () => {
+    presence.delete(ws);
+    broadcastPresence();
+  });
 });
 
 loadBoardFromFile();

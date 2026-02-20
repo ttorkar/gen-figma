@@ -55,6 +55,16 @@ input, select, textarea { font: inherit; color: inherit; background: #1c1c1e; bo
   cursor: grab;
 }
 .canvas.panning { cursor: grabbing; }
+body.space-held .canvas-wrap { cursor: grab; }
+body.space-held .canvas-wrap .canvas { cursor: grab; }
+body.space-held .canvas-wrap.panning { cursor: grabbing; }
+.marquee-rect {
+  position: absolute;
+  border: 2px dashed var(--focus-ring);
+  background: rgba(59, 130, 246, 0.08);
+  pointer-events: none;
+  z-index: 10;
+}
 .canvas .canvas-grid {
   position: absolute;
   /* extend 8000px in all directions so dots exist left/above 0,0 */
@@ -303,3 +313,46 @@ input, select, textarea { font: inherit; color: inherit; background: #1c1c1e; bo
 .message--error { background: #7f1d1d; color: #fecaca; border: 1px solid #991b1b; }
 .message--warning { background: #78350f; color: #fef3c7; border: 1px solid #92400e; }
 .message--info { background: #1e3a5f; color: #bfdbfe; border: 1px solid #1e40af; }
+
+/* ----- Collaboration status & presence ----- */
+.collab-status {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 1000;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  display: none;
+}
+.collab-status.connected { color: var(--text-color); }
+.collab-status.reconnecting { color: #ca8a04; }
+.collab-status.offline { color: #dc2626; }
+.presence-list {
+  position: fixed;
+  top: 56px;
+  right: 16px;
+  z-index: 1000;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  max-width: 200px;
+}
+.presence-list:empty { display: none; }
+.presence-list.hidden { display: none !important; }
+.presence-list__title { margin-bottom: 6px; font-weight: 600; color: var(--text-color); }
+.presence-list__user { margin: 2px 0; }
+.presence-list__user--you { color: var(--focus-ring); }
+.presence-list__set-name {
+  margin-top: 8px;
+  font-size: 11px;
+  padding: 4px 8px;
+  width: 100%;
+  cursor: pointer;
+}
